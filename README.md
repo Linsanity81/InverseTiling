@@ -1,5 +1,15 @@
+<p align="center">
+ <img width=640px height=240px src="./doc/teaser.png" alt="Project logo">
+</p>
 
-<h3 align="center">Implementation of "Inverse Tiling of 2D Finite Domains"</h3>
+<h3 align="center">Inverse Tiling of 2D Finite Domains</h3>
+
+<div align="center">
+
+  [![Status](https://img.shields.io/badge/status-active-success.svg)]() 
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
+
+</div>
 
 ## Table of Contents
 - [About](#about)
