@@ -18,8 +18,9 @@
 - [Step-by-step Instructions for Creating a K-hedral Tiling](#create_puzzle)
 
 ## About <a name = "about"></a>
-This code repo implements a computational approach called *inverse tiling* to produce K-hedral tilings. 
+This code repo implements a computational approach called *inverse tiling* to produce K-hedral tilings on square grids.
 We implemented our computational approach in C++ and `libigl` [Jacobson et al. 2018] on a desktop computer with 3.6 GHz 8-Core Intel processor and 16 GB RAM. 
+If you have any problems when using this code, you can contact me any time through 1998rlchen@gmail.com.
 
 ## Code Installation <a name = "getting_started"></a>
 First, clone the repository, run CMake to generate Makefiles or CMake/Visual Studio project files, and the rest should work automatically.
@@ -135,7 +136,15 @@ Lastly, you can click `Save K-hedral Tiling` to save the computed K-hedral tilin
  <img width=540px height=200px src="doc/Step4.png">
 </p>
 
+## Authors
+- [Rulin Chen](https://linsanity81.github.io/) 
+- [Xuyang Ma](https://orcid.org/0009-0002-7230-7178) 
+- [Praveer Tewari](https://www.linkedin.com/in/praveer-tewari-b1012b13a/)
+- [Chi-Wing Fu](https://www.cse.cuhk.edu.hk/~cwfu/)
+- [Peng Song](https://songpenghit.github.io/)
 
+## Acknowledgements
+TODO
 
 
 
