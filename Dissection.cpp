@@ -278,7 +278,7 @@ Shape generatePiecesLocally(Shape & shape, int pieceNumThreshold)
 
             if (time_elapsed > timeLimitForEachSubshape)
             {
-                cout << "unsuccessfuly to reduce K. " << endl;
+                cout << "unsuccessfully to reduce K. " << endl;
                 break;
             }
 
@@ -477,14 +477,11 @@ Shape generatePieces(Shape & shape, int N, int K, int G, int T, bool autoSave, s
 
                 cout << "Grew all pieces by one pixel. " << newShape.getNumUnfilledPx() << " pixels remaining. \n";
 
-                if (newShape.getNumUnfilledPx() <= 0) { 
-                    // complete
-
-                    // if (newShape.score <= best_score && newShape.getNumUnfilledPx() == 0 && newShape.score > 0) 
-                    if (newShape.score >= 12 && newShape.getNumUnfilledPx() == 0 && newShape.score <= 12)  
-                    // if (newShape.score <= 35 && newShape.getInstanceNumDeviation() <= 120 && newShape.getNumUnfilledPx() == 0 && newShape.score > 0)  
+                // complete
+                if (newShape.getNumUnfilledPx() <= 0) 
+                { 
+                    if (newShape.score <= best_score && newShape.getNumUnfilledPx() == 0 && newShape.score > 0) 
                     {
-
                         cout << "Find a N = " << newShape.pieces.size() << " K = " << newShape.score << " result. " << endl;
 
                         best_score = newShape.score;
@@ -494,14 +491,16 @@ Shape generatePieces(Shape & shape, int N, int K, int G, int T, bool autoSave, s
                         auto dura = duration_cast<milliseconds>(time_now - start);
                         double elapsed = (duration.count() / (double)1000) / 60;
 
+                        best_solution.assignPieceID();
+                        best_solution.assignPieceClusterID();
+
                         // save current best result
                         if (autoSave)
                         {
-                            // string savingPath =  "/Users/sutd-cgl/Documents/GitHub/InverseTiling/Result/auto_save/";
-                            string savingPath =  "/Users/linsanity/Documents/GitHub/2024_InverseTiling/Result/auto_save/";
+                            // string savingPath =  "./Result/auto_save/";
+                            string savingPath =  "../";
 
                             string pureFolderName = best_solution.getOutputFolderPath(savingPath + pureFileName) + "_size" + to_string(best_solution.getSmallestPieceSize()) + "To" + to_string(best_solution.getLargestPieceSize()) + "_" + to_string(elapsed) + "min";
-                            // string pureFolderName = best_solution.getOutputFolderPath(savingPath + pureFileName) + "_size" + to_string(best_solution.getSmallestPieceSize()) + "To" + to_string(best_solution.getLargestPieceSize()) + "_" + "instanceVariance" + to_string(best_solution.getInstanceNumDeviation()) + "_" + to_string(elapsed) + "min";
                             saveShape2File(best_solution, pureFolderName, best_solution.getOutputFileFullName(pureFolderName + "/" + pureFileName), elapsed);
 
                             string pureGrowingStateSavingFolderName = pureFolderName + "/enlarging_states";
@@ -518,9 +517,9 @@ Shape generatePieces(Shape & shape, int N, int K, int G, int T, bool autoSave, s
                                         growingStates[stateID].pieces.push_back(Piece(remaining_pixels, Color{150,150,150}));
                                 }
 
-                                saveShape2File(growingStates[stateID], pureGrowingStateSavingFolderName, pureGrowingStateSavingFolderName + "/" + to_string(stateID) + ".puz", elapsed);
+                                // saveShape2File(growingStates[stateID], pureGrowingStateSavingFolderName, pureGrowingStateSavingFolderName + "/" + to_string(stateID) + ".puz", elapsed);
                             }
-                        } 
+                        }
 
                     }
 
@@ -626,7 +625,7 @@ Shape generatePiecesWithGivenSeeds(Shape & shape, int N, int K, int G, int T, bo
                         // save current best result
                         if (autoSave)
                         {
-                            string savingPath =  "/Users/linsanity/Documents/Github/2024_TileableShape/Result/auto_save/";
+                            string savingPath =  "../Result/auto_save/";
                             string pureFolderName = best_solution.getOutputFolderPath(savingPath + pureFileName) + "_size" + to_string(best_solution.getSmallestPieceSize()) + "To" + to_string(best_solution.getLargestPieceSize()) + "_" + to_string(elapsed) + "min";
                             saveShape2File(best_solution, pureFolderName, 
                             best_solution.getOutputFileFullName(pureFolderName + "/" + pureFileName), elapsed);
@@ -957,7 +956,7 @@ Shape growPiecesByOnePixel(Shape & shape, int backtrackNum, bool & isDisconnecte
 
         std::sort(piecePairs.begin(), piecePairs.end(),
               [](pair<int, vector<Pixel>> & a, pair<int, vector<Pixel>> & b) {
-                  return a.second.size() < b.second.size();  // 按元素数量升序排序
+                  return a.second.size() < b.second.size();
               });
 
         while (!piecePairs.empty())
@@ -1328,7 +1327,7 @@ Piece selectGuidingPieceClassTemplate(vector<Piece> & piece_templates, Shape & s
             continue;
         }
 
-        float currPossib = round( 10.0 * (1.0 - pieceSizeList[i]) ) + round( 0.0 * instanceNumList[i]);
+        float currPossib = round( 9.0 * (1.0 - pieceSizeList[i]) ) + round( 1.0 * instanceNumList[i]);
         // float currPossib = round( 10.0 * (1.0 - pieceSizeList[i]) ) + round(0.0 * instanceNumList[i]);
 
         if (currPossib < 1.0) 

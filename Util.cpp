@@ -412,7 +412,6 @@ bool isSameShape_old(const Piece& piece1, const Piece& piece2) {
     return false;
 }
 
-// 逆时针旋转90度
 vector<vector<int>> rotate90(const vector<vector<int>>& original) {
     int rows = original.size();
     int cols = original[0].size();
@@ -444,7 +443,7 @@ bool isSameShape(Piece& piece1, Piece& piece2)
             return true;
         }
 
-        B = rotate90(B);  // 逆时针旋转90度
+        B = rotate90(B);
     }
 
     return false;
@@ -457,12 +456,10 @@ bool isSubset(vector<vector<int>>& subset, vector<vector<int>>& superset)
     int rowsSuperset = superset.size();
     int colsSuperset = superset[0].size();
 
-    // 检查维度是否匹配
     if (rowsSubset != rowsSuperset || colsSubset != colsSuperset) {
         return false;
     }
 
-    // 遍历每个元素，检查是否在另一个图形中出现
     for (int i = 0; i < rowsSubset; ++i)
     {
         for (int j = 0; j < colsSubset; ++j) 
@@ -490,7 +487,7 @@ bool isSubsetShape(Piece & piece1, Piece & piece2)
         if (isSubset(A, B) and A != B)
             return true;
 
-        B = rotate90(B);  // 逆时针旋转90度
+        B = rotate90(B);
     }
 
     return false;
@@ -1095,11 +1092,13 @@ void saveShape2File(Shape & shape, string folderPath, string filePath, double ru
     if (!fs::exists(folderPath)) 
     {
         if (fs::create_directory(folderPath)) {
-            std::cout << "Create folder for saving puzzle successfully." << std::endl;
+            // std::cout << "Create folder for saving puzzle successfully." << std::endl;
         } else {
             std::cerr << "Cannot create folder." << std::endl;
+            return;
         }
     } 
+
     // else 
     // {
     //     std::cout << "Folder existing." << std::endl;
@@ -1160,12 +1159,12 @@ Shape readShapeFromFile(string filePath)
 
     if (filePath.size() < 4)
     {
-        std::cerr << "Cannot open file: this is not a .vol or .puz input file." << std::endl;
+        std::cerr << "Cannot open file: this is not a .dom input file." << std::endl;
         return Shape(pixels);
     }
 
-    if (filePath.substr(filePath.size() - 4) != ".vol" && filePath.substr(filePath.size() - 4) != ".puz") {
-        std::cerr << "Cannot open file: this is not a .vol or .puz input file." << std::endl;
+    if (filePath.substr(filePath.size() - 4) != ".dom") {
+        std::cerr << "Cannot open file: this is not a .dom input file." << std::endl;
         return Shape(pixels);
     }
 
@@ -1176,7 +1175,7 @@ Shape readShapeFromFile(string filePath)
         return Shape(pixels);
     }
 
-    if (filePath.substr(filePath.size() - 4) == ".vol")
+    if (filePath.substr(filePath.size() - 4) == ".domain")
     {
         int numRows, numCols, numHeight;
         inputFile >> numRows >> numCols >> numHeight;
@@ -1550,7 +1549,6 @@ void normalizeVector(std::vector<float>& vec) {
         return;
     }
 
-    // 归一化向量
     for (float& value : vec) {
         value = (value - minValue) / float(maxValue - minValue);
     }

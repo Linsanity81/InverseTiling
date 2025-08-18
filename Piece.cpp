@@ -67,7 +67,6 @@ void Piece::initializeMatrix() {
 
 void Piece::initializePieceShapeAsMatrix()
 {
-    // 找到最小和最大的行和列坐标
     int minRow = INT_MAX, maxRow = INT_MIN;
     int minCol = INT_MAX, maxCol = INT_MIN;
 
@@ -78,18 +77,15 @@ void Piece::initializePieceShapeAsMatrix()
         maxCol = max(maxCol, pixel.y);
     }
 
-    // 计算裁剪后的行数和列数
     int numRows = maxRow - minRow + 1;
     int numCols = maxCol - minCol + 1;
 
-    // 创建二维数组并初始化为0
     vector<vector<int>> croppedPiece(numRows, vector<int>(numCols, 0));
 
-    // 将像素坐标映射到二维数组中
     for (const Pixel& pixel : pixels) {
         int newRow = pixel.x - minRow;
         int newCol = pixel.y - minCol;
-        croppedPiece[newRow][newCol] = 1; // 1表示该位置有像素
+        croppedPiece[newRow][newCol] = 1;
     }
 
     pieceShapeAsMatrix = croppedPiece;
@@ -123,7 +119,7 @@ void Piece::generateRenderMeshes() {
         V.row(Vrow + 3) << pixel.x + 0.5, pixel.y - 0.5;
         V4.row(Virow) << pixel.x + 0.5, pixel.y - 0.5;
 
-        F.row(Frow) << Vrow, Vrow + 1, Vrow + 2;
+        F.row(Frow) << Vrow, Vrow + 2, Vrow + 1;
         F.row(Frow + 1) << Vrow, Vrow + 3, Vrow + 2;
 
         Vrow += 4;
@@ -202,15 +198,13 @@ void Piece::generateRenderMeshes() {
         p1 = p1 + 0.5 * shortSide * (p1 - p2);
         p2 = p2 + 0.5 * shortSide * (p2 - p1);
         
-        // 计算矩形的两个边向量
         Eigen::Vector2d midPoint = (p1 + p2) / 2.0;
         Eigen::Vector2d e1 = (p2 - p1) / 2.0;
-        Eigen::Vector2d e2(-e1.y(), e1.x());  // 旋转90度，得到垂直边向量
+        Eigen::Vector2d e2(-e1.y(), e1.x());
 
         e2.normalize();
         e2 = (0.5 * shortSide) * e2;
 
-        // 计算矩形的四个顶点
         topLeft = midPoint + e2 - e1;
         topRight = midPoint + e2 + e1;
         bottomLeft = midPoint - e2 - e1;

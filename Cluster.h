@@ -11,7 +11,6 @@ public:
     Eigen::MatrixXi pixelsAsMatrix;
     int r; int g; int b;
 
-
     // these are all used by ligibl for visualization of the cluster
     Eigen::MatrixXd V;
     Eigen::MatrixXd V1;

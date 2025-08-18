@@ -287,10 +287,9 @@ void Shape::assignPieceClusterID()
 		pieceList.erase(pieceList.begin());
 	}
 
-	// 使用 lambda 函数作为排序的比较函数
     std::sort(pieceListsByCluster.begin(), pieceListsByCluster.end(),
               [](const std::vector<Piece>& a, const std::vector<Piece>& b) {
-                  return a.size() > b.size();  // 按元素数量降序排序
+                  return a.size() > b.size();
               });
 
 	// assign clusterID to each piece
@@ -343,7 +342,7 @@ string Shape::getOutputFileFullName(string prefix)
 
 	// cout << prefix + extension + "/" + extension + ".puz" << endl;
 
-	return prefix + extension + ".puz";
+	return prefix + extension + ".til";
 }
 
 int Shape::getSmallestPieceSize()

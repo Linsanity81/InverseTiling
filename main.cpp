@@ -21,11 +21,8 @@ namespace fs = std::filesystem;
 
 // Color scheme table
 Eigen::RowVector3d helperColorList[32] = {
-		// Eigen::RowVector3d(0.64, 0.9, 0.9),       //  6: light cyan
-		// Eigen::RowVector3d(0.9, 0.63, 0.63),      //  7: light red
 
 		Eigen::RowVector3d(0.63, 0.9, 0.63),	  //  1: light green 
-		// Eigen::RowVector3d(0.9, 0.63, 0.63),      //  7: light red
 		Eigen::RowVector3d(0.95, 0.95, 0.66),     //  2: light yellow
 		Eigen::RowVector3d(0.81, 0.63, 0.9),   	  //  3: light purple
         Eigen::RowVector3d(0.9, 0.74, 0.63),      //  4: light brown
@@ -35,10 +32,9 @@ Eigen::RowVector3d helperColorList[32] = {
 		Eigen::RowVector3d(0.9, 0.63, 0.63),      //  7: light red
 		Eigen::RowVector3d(0.9, 0.63, 0.8),       //  8: light pink
 		Eigen::RowVector3d(0.8, 1.0, 0.7),        //  9: light pink
-		// Eigen::RowVector3d(0.85, 0.85, 0.85),     //  10: light pink
-		Eigen::RowVector3d(0.7, 0.85, 1.0),    //  10: light pink
+		Eigen::RowVector3d(0.7, 0.85, 1.0),       //  10: light pink
 
-		Eigen::RowVector3d(0.392, 0.784, 0.706),     //  11: light pink
+		Eigen::RowVector3d(0.392, 0.784, 0.706),  //  11: light pink
 		Eigen::RowVector3d(0.8, 0.8, 0.56),       //  12: light pink
 		Eigen::RowVector3d(0.95, 0.78, 0.67),     //  13: light pink
 		Eigen::RowVector3d(0.582, 0.701, 0.9),    //  14: light pink
@@ -54,7 +50,7 @@ Eigen::RowVector3d helperColorList[32] = {
 		Eigen::RowVector3d(0.902, 0.668, 0.497),  //  22: Red
 		Eigen::RowVector3d(0.608, 0.863, 0.341),  //  23: light pink
 		Eigen::RowVector3d(0.957, 0.941, 0.380),  //  24: light pink
-		Eigen::RowVector3d(0.59, 0.85, 0.79),  //  25: Red
+		Eigen::RowVector3d(0.59, 0.85, 0.79),     //  25: Red
 
 		Eigen::RowVector3d(0.392, 0.902, 0.902),  //  26: Red
 		Eigen::RowVector3d(0.565, 0.733, 0.804),  //  27: Red
@@ -71,7 +67,8 @@ Eigen::RowVector3d helperColorList[32] = {
 int N = 15; // num of template pieces to solve for
 int G = 10; // number of times to try growing process for each seed
 int T = 120; // amount of time to run algorithm for in minutes
-int K = 100; // number of discreate equivalence classes
+int K = 10; // number of discreate equivalence classes
+int target_K = 10;
 int seedNum = 50;
 bool isUniformDistribution = true;
 int minSeedDist = 2;
@@ -80,9 +77,9 @@ int shapeCandisNum = 10;
 float minAvgSizeRatio = 0.5;
 float maxAvgSizeRatio = 1.5;
 int minTileSize = 4;
-int maxTileSize = 6;
-bool autoSave = true;
-bool isLooseSizeRequirement = true;
+int maxTileSize = 7;
+bool autoSave = false;
+bool isLooseSizeRequirement = false;
 // bool DEBUG = true;
 
 // debug mode parameters
@@ -111,8 +108,9 @@ int bestScore;
 
 // Init the viewer
 Viewer viewer;
-Window input_window = Window(0, 0, 1600, 1600);
-Window output_window = Window(1600, 0, 1600, 1600);
+Window input_window = Window(0, 402, 800, 800);
+Window output_window = Window(802, 402, 800, 800);
+Window template_window = Window(0, 0, 1600, 400);
 
 // Allocate temporary buffers
 Eigen::Matrix<unsigned char,Eigen::Dynamic,Eigen::Dynamic> _R(1600,1600);
@@ -161,6 +159,43 @@ bool isPieceConnected(const vector<Pixel>& currPixelList) {
     return (visited.size() == currPixelList.size()) || (visited.size() == currPixelList.size() - 1) || (visited.size() == currPixelList.size() - 2) || (visited.size() == currPixelList.size() - 3) || (visited.size() == currPixelList.size() - 4);
 }
 
+float CalculateMaxLabelWidth(const std::vector<std::string>& labels) {
+    float maxWidth = 0.0f;
+    for (const auto& label : labels) {
+        float width = ImGui::CalcTextSize(label.c_str()).x;
+        if (width > maxWidth) {
+            maxWidth = width;
+        }
+    }
+    return maxWidth;
+}
+
+void RenderAlignedText(const std::string& label, const char* value, float maxLabelWidth) {
+    float currentLabelWidth = ImGui::CalcTextSize(label.c_str()).x;
+
+    float colonOffset = maxLabelWidth - currentLabelWidth;
+
+    ImGui::Text("%s", label.c_str());
+    ImGui::SameLine(maxLabelWidth+11);
+    ImGui::Text(": %s", value);
+}
+
+void RenderUI() {
+    std::vector<std::string> labels = {
+        "Domain",
+        "Number of Grid Cells (M)",
+        "Average Tile Size",
+        "Number of Prototiles (K)"
+    };
+
+    float maxLabelWidth = CalculateMaxLabelWidth(labels);
+
+    RenderAlignedText("Domain", fileName.c_str(), maxLabelWidth);
+    RenderAlignedText("Number of Grid Cells (M)", std::to_string(input.all_pixels.size()).c_str(), maxLabelWidth);
+    RenderAlignedText("Average Tile Size", std::to_string(input.all_pixels.size() / N).c_str(), maxLabelWidth);
+    RenderAlignedText("Number of Prototiles (K)", std::to_string(bestScore).c_str(), maxLabelWidth);
+}
+
 void statusBar()
 {
     fileName = inputFileName;
@@ -177,14 +212,7 @@ void statusBar()
     size_t dotPosition = fileName.find_last_of('.');
     pureFileName = fileName.substr(0, dotPosition);
 
-    ImGui::Text("Shape :     %s", fileName.c_str());
-    ImGui::Text("Pixels :     %zu", input.all_pixels.size());
-    ImGui::Text("Avg size:      %zu", input.all_pixels.size() / N);
-    ImGui::Text("N         :     %lu", best_solution.pieces.size());
-    ImGui::Text("K         :     %d", bestScore);
-    ImGui::Text("minSize         :     %d", best_solution.getSmallestPieceSize());
-    ImGui::Text("maxSize         :     %d", best_solution.getLargestPieceSize());
-    ImGui::Text("Time   :     %f s", runningTime);
+    RenderUI();
 }
 
 void updateViewer()
@@ -194,6 +222,9 @@ void updateViewer()
 
     viewer.windows[1].clear();
     viewer.windows[1].addShape(best_solution);
+
+    viewer.windows[2].clear();
+    viewer.windows[2].addShape(best_solution);
 
     viewer.clearViewerMeshes();
     viewer.updateWindows();
@@ -220,8 +251,8 @@ void addControlPanel()
         ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
 
         // Define next window position + size
-        ImGui::SetNextWindowPos(ImVec2(1600, 0), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(300, 800), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(800, 0), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(300, 600), ImGuiCond_FirstUseEver);
         ImGui::Begin(
             "Control Panel", nullptr,
             ImGuiWindowFlags_NoSavedSettings
@@ -236,51 +267,36 @@ void addControlPanel()
         double p = 2;
         ImGui::Dummy(ImVec2(0.0f, 2.0f));
 
-        ImGui::Text("Seed num");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##Seed num", &seedNum);
+        // ImGui::Text("Seed num");
+        // ImGui::SameLine(100, p);
+        // ImGui::DragInt("##Seed num", &seedNum);
 
-        ImGui::Text("N piece num");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##N piece num", &N);
+        ImGui::PushItemWidth(140.0f);
+
+
+        ImGui::Text("Number of Tiles (N)");
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(150);
+        ImGui::InputInt("##N piece num", &N);
 
         ImGui::Text("Target K");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##Target K", &K);
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(150);
+        ImGui::InputInt("##Target K", &target_K);
 
-        ImGui::Text("Min seed dist");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##Min seed dist", &minSeedDist);
 
-        ImGui::Text("G grow attempts per seed");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##G growing attempts", &G);
+        ImGui::Text("Min Tile Size (C_min)");
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(150);
+        ImGui::InputInt("##Min Tile Size", &minTileSize);
 
-        ImGui::Text("T max mins");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##T max mins", &T);
+        ImGui::Text("Max Tile Size (C_max)");
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(150);
+        ImGui::InputInt("##Max Tile Size", &maxTileSize);
 
-        ImGui::Text("Shape Candis Num");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##Shape Candis Num", &shapeCandisNum);
 
-        // ImGui::Text("Min Size Ratio");
-        // ImGui::SameLine(100, p);
-        // ImGui::DragFloat("##Min Size Ratio", &minAvgSizeRatio);
-
-        // ImGui::Text("Max Size Ratio");
-        // ImGui::SameLine(100, p);
-        // ImGui::DragFloat("##Max Size Ratio", &maxAvgSizeRatio);
-
-        ImGui::Text("Min Tile Size");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##Min Tile Size", &minTileSize);
-
-        ImGui::Text("Max Tile Size");
-        ImGui::SameLine(100, p);
-        ImGui::DragInt("##Max Tile Size", &maxTileSize);
-
-        ImGui::Text("Min Piece Threshold");
+        /*ImGui::Text("Min Piece Threshold");
         ImGui::SameLine(100, p);
         ImGui::DragInt("##Min Piece Threshold", &pieceNumThreshold);
 
@@ -294,12 +310,12 @@ void addControlPanel()
 
         ImGui::Text("Auto Save");
         ImGui::SameLine(150, p);
-        ImGui::Checkbox("##Auto Save", &autoSave);
+        ImGui::Checkbox("##Auto Save", &autoSave);*/
 
         ImGui::Dummy(ImVec2(0.0f, 2.0f));
 
         // Add a button
-        if (ImGui::Button("Read", ImVec2(-1,0)))
+        if (ImGui::Button("Load An Input Domain", ImVec2(-1,0)))
         {
             inputFileName = igl::file_dialog_open();
             if( !inputFileName.empty() )
@@ -314,20 +330,25 @@ void addControlPanel()
                 bestScore = input.current_templates.size();
                 growing_round = 0;
 
-                if (input.pieces.size() != 0)
+                if (input.pieces.size() != 0 && input.pieces.size() != 1)
                     N = input.pieces.size();
-                else    
-                    N = 15;
+                else {
+                    N = input.all_pixels.size()/5;
+                    target_K = N/3;
+                }
+
+                minTileSize = input.all_pixels.size() / N - 1;
+                maxTileSize = input.all_pixels.size() / N + 2;
 
                 updateViewer();
             }
         }
 
-        if (ImGui::Button("Optimize -- Brute-force", ImVec2(-1,0)))
+        /*if (ImGui::Button("Optimize -- Brute-force", ImVec2(-1,0)))
         {
             auto start = high_resolution_clock::now();
             int minK = 100000;
-            std::vector<std::vector<int>> puzzleMat = input.get2DPuzzleMatrix(); 
+            std::vector<std::vector<int>> puzzleMat = input.get2DPuzzleMatrix();
 
             while (1)
             {
@@ -409,14 +430,14 @@ void addControlPanel()
 
                 // break;
             }
-        }
+        }*/
 
         // Add a button
-        if (ImGui::Button("Optimize -- Global", ImVec2(-1,0)))
+        if (ImGui::Button("Prototile Set Construction", ImVec2(-1,0)))
         {
             vector<Piece> existingTemplates;
             bool isFound = false;
-            best_solution = generatePieces(input, N, K, G, T, autoSave, pureFileName, 
+            best_solution = generatePieces(input, N, target_K, G, T, autoSave, pureFileName,
                                            seedNum, minAvgSizeRatio, maxAvgSizeRatio, minTileSize, maxTileSize,
                                            minSeedDist, isUniformDistribution, shapeCandisNum,
                                            runningTime, bestScore, existingTemplates, isFound, isLooseSizeRequirement);
@@ -427,7 +448,7 @@ void addControlPanel()
             updateViewer();
         }
 
-        // ImGui::Dummy(ImVec2(0.0f, 2.0f));
+        /*// ImGui::Dummy(ImVec2(0.0f, 2.0f));
 
         // if (ImGui::Button("Read Shape with Seeds", ImVec2(-1,0)))
         // {
@@ -475,110 +496,22 @@ void addControlPanel()
 
         //     // update viewport
         //     updateViewer();
-        // }
+        // }*/
         
 
-        if (ImGui::Button("Optimize K -- Local", ImVec2(-1,0)))
+        if (ImGui::Button("Prototile Set Reduction", ImVec2(-1,0)))
         {
-            input = best_solution;
-            best_solution = generatePiecesLocally(input, pieceNumThreshold);
+            // input = best_solution;
+            best_solution = generatePiecesLocally(best_solution, pieceNumThreshold);
 
+            bestScore = best_solution.score;
             // update viewport
             updateViewer();
         }
 
-        if (ImGui::Button("Optimize Distribution -- Local", ImVec2(-1,0)))
-        {
-            input = best_solution;
-            best_solution = generatePiecesLocally_distribution(input, pieceNumThreshold);
-
-            // update viewport
-            updateViewer();
-        }
-
-        if (ImGui::Button("Save Tiling Image", ImVec2(-1,0)))
-        {
-            for (int i = 0; i < viewer.viewer.data_list.size(); ++i)
-                viewer.viewer.core().draw_buffer(viewer.viewer.data(),false,_R,_G,_B,_A);
-
-            _A.setConstant(255);
-            
-            igl::stb::write_image("/home/yishin/CLionProjects/InverseTiling/Rendering/temp.png",_R,_G,_B,_A);
-        }
-
-
-        // ImGui::Dummy(ImVec2(0.0f, 2.0f));
-
-        // // Add a button
-        // if (ImGui::Button("Generate Seeds", ImVec2(-1,0)))
-        // {
-        //     srand(seedNum);
-
-        //     input.clear();
-        //     Shape seed = generateNSeedPieces(N, input, minSeedDist, isUniformDistribution);
-
-        //     N = seed.pieces.size();
-        //     best_solution = seed;
-
-        //     // update viewport
-        //     updateViewer();
-        // }
-
-        // // Add a button
-        // if (ImGui::Button("Grow Pieces", ImVec2(-1,0)))
-        // {
-        //     if (growing_round == 0)
-        //     {
-        //         srand(seedNum);
-
-        //         input.clear();
-
-        //         debug_shape = generateNSeedPieces(N, input, minSeedDist, isUniformDistribution);
-        //         // debug_shape.updateCentrality();
-
-        //         best_solution = debug_shape;
-
-        //         isDebugShapeDisconnected = false;
-
-        //         growing_round++;
-
-        //         // update viewport
-        //         updateViewer(); 
-
-        //     }
-        //     else
-        //     {
-        //         vector<Piece> existingTemplates;
-        //         debug_shape = growPiecesByOnePixel(debug_shape, shapeCandisNum, isDebugShapeDisconnected, existingTemplates, minTileSize, maxTileSize, isLooseSizeRequirement);
-
-        //         if (isDebugShapeDisconnected)
-        //         {
-        //             cout << "Find a disconnected result. " << endl;
-
-        //             isDebugShapeDisconnected = true;
-
-        //             best_solution = debug_shape;
-
-        //             growing_round = 0;
-        //         }
-        //         else
-        //         {
-        //             cout << "Grew all pieces by one pixel. " << debug_shape.getNumUnfilledPx() << " pixels remaining. \n";
-
-        //             best_solution = debug_shape;
-
-        //             growing_round++;
-        //         }
-
-        //         // update viewport
-        //         updateViewer(); 
-        //     }
-        // }
-
-        ImGui::Dummy(ImVec2(0.0f, 2.0f));
 
         // Add a button
-        if (ImGui::Button("Write", ImVec2(-1,0)))
+        if (ImGui::Button("Save K-hedral Tiling", ImVec2(-1,0)))
         {
             string outputFolderPath = igl::file_dialog_save();
             if( !outputFolderPath.empty())
@@ -587,7 +520,7 @@ void addControlPanel()
 
                 size_t lastSlashPosition = outputFolderPath.find_last_of('/');
                 string savingPath = outputFolderPath.substr(0, lastSlashPosition + 1);
-                string pureFolderName = best_solution.getOutputFolderPath(savingPath + pureFileName) + "_size" + to_string(best_solution.getSmallestPieceSize()) + "To" + to_string(best_solution.getLargestPieceSize());
+                string pureFolderName = best_solution.getOutputFolderPath(savingPath + pureFileName);// + "_size" + to_string(best_solution.getSmallestPieceSize()) + "To" + to_string(best_solution.getLargestPieceSize());
 
                 // save .puz file
                 saveShape2File(best_solution, pureFolderName, best_solution.getOutputFileFullName(pureFolderName + "/" + pureFileName), runningTime);
@@ -596,119 +529,120 @@ void addControlPanel()
 
         ImGui::Dummy(ImVec2(0.0f, 2.0f));
 
-        if (ImGui::Button("Render states", ImVec2(-1,0)))
-        {
-            srand(1);
+        /*///
+        // if (ImGui::Button("Render states", ImVec2(-1,0)))
+        // {
+        //     srand(1);
 
-            renderInputFileName = igl::file_dialog_open();
-            if( !renderInputFileName.empty() )
-            {
-                fs::path fullPath(renderInputFileName);
+        // renderInputFileName = igl::file_dialog_open();
+        //     if( !renderInputFileName.empty() )
+        //     {
+        //         fs::path fullPath(renderInputFileName);
+        //
+        //         fs::path directoryPath = fullPath.parent_path();
+        //
+        //         std::cout << "Directory path: " << directoryPath.string() << std::endl;
+        //
+        //         fs::create_directory(directoryPath / "state_images");
+        //
+        //         stateID = 0;
+        //
+        //         terminalState = readShapeFromFile(renderInputFileName);
+        //         totalPieceNum = terminalState.pieces.size();
+        //
+        //         all_templates.clear();
+        //         currentColorList.clear();
+        //
+        //         terminalState.updateTemplates(false);
+        //         terminalState.assignPieceClusterID();
+        //
+        //         for (int k = 1; k <= 20; ++k)
+        //         {
+        //             for (auto & piece : terminalState.pieces)
+        //             {
+        //                 if (piece.pieceClusterID == k)
+        //                 {
+        //                     all_templates.push_back(piece);
+        //                     currentColorList.push_back(helperColorList[k - 1]);
+        //
+        //                     cout << "find a template in first 20 templates. " << endl;
+        //
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //
+        //         int countColor = 20;
+        //
+        //         while(fs::exists(directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")))
+        //         {
+        //             Shape currState = readShapeFromFile((directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")).string());
+        //
+        //             int countPiece = 0;
+        //             for (auto & piece : currState.pieces)
+        //             {
+        //                 if (currState.pieces.size() < totalPieceNum)
+        //                     break;
+        //
+        //                 countPiece++;
+        //
+        //                 if (!isPieceinTemplates(piece, all_templates) and countPiece <= totalPieceNum)
+        //                 {
+        //                     all_templates.push_back(piece);
+        //
+        //                     if (countColor < 32)
+        //                     {
+        //                         currentColorList.push_back(helperColorList[countColor]);
+        //
+        //                         countColor ++;
+        //                     }
+        //
+        //                     else
+        //                     {
+        //                         Color_eigen color;
+        //
+        //                         float minSaturation = 0.25f; // Minimum saturation
+        //                         float maxSaturation = 0.5f; // Maximum saturation
+        //                         float minValue = 0.85f;      // Minimum value
+        //                         float maxValue = 1.00f;      // Maximum value
+        //
+        //                         generateUnsaturatedColor(color, minSaturation, maxSaturation, minValue, maxValue, currentColorList);
+        //
+        //                         cout << "successfully to generate a new color. " << endl;
+        //
+        //                         currentColorList.push_back(Eigen::RowVector3d(color[0] / 255.0, color[1] / 255.0, color[2] / 255.0));
+        //                     }
+        //                 }
+        //             }
+        //
+        //             stateID++;
+        //         }
+        //
+        //         cout << stateID << " states in total. " << endl;
+        //         cout << all_templates.size() << " templates in total. " << endl;
+        //
+        //         stateID = 0;
+        //
+        //         // load the input domain first
+        //         while(fs::exists(directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")))
+        //         {
+        //             Shape currState = readShapeFromFile((directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")).string());
+        //
+        //             viewer.windows[0].clear();
+        //             viewer.windows[0].addShape(currState);
+        //
+        //             viewer.windows[1].clear();
+        //             viewer.windows[1].addShape(currState);
+        //
+        //             viewer.clearViewerMeshes();
+        //             viewer.updateViewerBufferAndSave(all_templates, currState, totalPieceNum, (directoryPath / "state_images" / (to_string(stateID) + ".png")).string(), stateID, currentColorList);
+        //
+        //             break;
+        //         }
+        //     }
+        // }*/
 
-                fs::path directoryPath = fullPath.parent_path();
-
-                std::cout << "Directory path: " << directoryPath.string() << std::endl;
-
-                fs::create_directory(directoryPath / "state_images");
-
-                stateID = 0;
-
-                terminalState = readShapeFromFile(renderInputFileName);
-                totalPieceNum = terminalState.pieces.size();
-
-                all_templates.clear();
-                currentColorList.clear();
-
-                terminalState.updateTemplates(false);
-                terminalState.assignPieceClusterID();
-
-                for (int k = 1; k <= 20; ++k)
-                {
-                    for (auto & piece : terminalState.pieces)
-                    {
-                        if (piece.pieceClusterID == k)
-                        {
-                            all_templates.push_back(piece);
-                            currentColorList.push_back(helperColorList[k - 1]);
-
-                            cout << "find a template in first 20 templates. " << endl;
-
-                            break;
-                        }
-                    }
-                }
-
-                int countColor = 20;
-
-                while(fs::exists(directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")))
-                {
-                    Shape currState = readShapeFromFile((directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")).string());
-
-                    int countPiece = 0;
-                    for (auto & piece : currState.pieces)
-                    {
-                        if (currState.pieces.size() < totalPieceNum)
-                            break;
-
-                        countPiece++;
-
-                        if (!isPieceinTemplates(piece, all_templates) and countPiece <= totalPieceNum)
-                        {
-                            all_templates.push_back(piece);
-
-                            if (countColor < 32)
-                            {
-                                currentColorList.push_back(helperColorList[countColor]);    
-
-                                countColor ++;
-                            }
-
-                            else
-                            {
-                                Color_eigen color;
-
-                                float minSaturation = 0.25f; // Minimum saturation
-                                float maxSaturation = 0.5f; // Maximum saturation
-                                float minValue = 0.85f;      // Minimum value
-                                float maxValue = 1.00f;      // Maximum value
-
-                                generateUnsaturatedColor(color, minSaturation, maxSaturation, minValue, maxValue, currentColorList);
-
-                                cout << "successfully to generate a new color. " << endl;
-
-                                currentColorList.push_back(Eigen::RowVector3d(color[0] / 255.0, color[1] / 255.0, color[2] / 255.0));
-                            }
-                        }
-                    }
-
-                    stateID++;
-                }
-
-                cout << stateID << " states in total. " << endl;
-                cout << all_templates.size() << " templates in total. " << endl;
-
-                stateID = 0;
-
-                // load the input domain first
-                while(fs::exists(directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")))
-                {
-                    Shape currState = readShapeFromFile((directoryPath / "enlarging_states" / (to_string(stateID) + ".puz")).string());
-
-                    viewer.windows[0].clear();
-                    viewer.windows[0].addShape(currState);
-
-                    viewer.windows[1].clear();
-                    viewer.windows[1].addShape(currState);
-
-                    viewer.clearViewerMeshes();
-                    viewer.updateViewerBufferAndSave(all_templates, currState, totalPieceNum, (directoryPath / "state_images" / (to_string(stateID) + ".png")).string(), stateID, currentColorList);
-
-                    break;
-                }
-            }
-        }
-
-        if (ImGui::Button("Prev State", ImVec2(-1,0)))
+        /*if (ImGui::Button("Prev State", ImVec2(-1,0)))
         {
             fs::path fullPath(renderInputFileName);
 
@@ -772,7 +706,7 @@ void addControlPanel()
             cout << (directoryPath / "state_images" / (to_string(stateID) + ".png")).string() << endl;
             
             igl::stb::write_image(((directoryPath / "state_images" / (to_string(stateID) + ".png")).string()),_R,_G,_B,_A);
-        }
+        }*/
 
         ImGui::End();
     };
@@ -784,13 +718,9 @@ void initWindows()
 
     viewer.addWindow(input_window);
     viewer.addWindow(output_window);
+    viewer.addWindow(template_window);
 
-    // std::thread updateThread(checkFrameUpdate);
-
-    viewer.launch(1900, 800);
-
-    // 等待并行线程结束
-    // updateThread.join();
+    viewer.launch(1100, 600);
 }
 
 int main() {
