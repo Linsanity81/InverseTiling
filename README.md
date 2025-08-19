@@ -22,6 +22,16 @@ This code repo implements a computational approach called *inverse tiling* to pr
 We implemented our computational approach in C++ and `libigl` [Jacobson et al. 2018] on a desktop computer with 3.6 GHz 8-Core Intel processor and 16 GB RAM. 
 If you have any problems when using this code, you can contact me any time through 1998rlchen@gmail.com.
 
+If you make use of this repo in your scientific work, please cite our paper. For your convenience,
+you can use the following bibtex snippet:
+
+    @inproceedings {Chen-2025-InverseTiling,
+    author   = {Rulin Chen and Xuyang Ma and Praveer Tewari and Chi-Wing Fu and Peng Song},
+    title    = {Inverse Tiling of 2D Finite Domains},
+    booktitle  = {SIGGRAPH Asia Conference Papers},
+    year     = {2025}}
+
+
 ## Code Installation <a name = "getting_started"></a>
 First, clone the repository, run CMake to generate Makefiles or CMake/Visual Studio project files, and the rest should work automatically.
 
