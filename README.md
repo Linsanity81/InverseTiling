@@ -19,6 +19,7 @@
 
 ## About <a name = "about"></a>
 This code repo implements a computational approach called *inverse tiling* to produce K-hedral tilings on square grids.
+We also provide the tiling results (`.til` files in the `Result/_paper` folder) and the input domains (`.dom` files in the `Shape` folder`) on square grids, as referenced in the paper.
 We implemented our computational approach in C++ and `libigl` [Jacobson et al. 2018] on a desktop computer with 3.6 GHz 8-Core Intel processor and 16 GB RAM. 
 If you have any problems when using this code, you can contact me any time through 1998rlchen@gmail.com.
 
